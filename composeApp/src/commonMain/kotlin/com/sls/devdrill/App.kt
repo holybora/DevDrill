@@ -9,9 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.sls.devdrill.navigation.GreetingRoute
 import com.sls.devdrill.navigation.HomeRoute
-import com.sls.devdrill.screens.GreetingScreen
 import com.sls.devdrill.screens.HomeScreen
 
 @Suppress("ModifierMissing")
@@ -31,18 +29,7 @@ fun App() {
                 startDestination = HomeRoute,
             ) {
                 composable<HomeRoute> {
-                    HomeScreen(
-                        onNavigateToGreeting = {
-                            navController.navigate(GreetingRoute)
-                        },
-                    )
-                }
-                composable<GreetingRoute> {
-                    GreetingScreen(
-                        onNavigateBack = {
-                            navController.popBackStack()
-                        },
-                    )
+                    HomeScreen()
                 }
             }
         }
