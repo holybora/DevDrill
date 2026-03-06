@@ -22,9 +22,9 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 
 ```bash
 # Android
-./gradlew :composeApp:assembleDebug
-./gradlew :composeApp:assembleRelease
-./gradlew :composeApp:installDebug            # Install on connected device/emulator
+./gradlew :androidApp:assembleDebug
+./gradlew :androidApp:assembleRelease
+./gradlew :androidApp:installDebug            # Install on connected device/emulator
 
 # Server (Ktor)
 ./gradlew :server:run                          # Starts on http://localhost:8080
@@ -33,7 +33,7 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 ./gradlew test
 
 # Module-specific tests
-./gradlew :composeApp:testDebugUnitTest
+./gradlew :androidApp:testDebugUnitTest
 ./gradlew :shared:test
 ./gradlew :server:test
 ./gradlew :core:model:test
@@ -42,7 +42,7 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 ./gradlew :shared:testDebugUnitTest --tests "com.sls.devdrill.SomeTest"
 
 # Clean build
-./gradlew clean :composeApp:assembleDebug
+./gradlew clean :androidApp:assembleDebug
 
 # Static analysis (detekt)
 ./gradlew detekt                               # All modules
@@ -60,12 +60,12 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 | Tool | Version |
 |------|---------|
 | Kotlin | 2.3.0 |
-| Compose Multiplatform | 1.10.0 |
-| AGP | 8.11.2 |
+| Compose Multiplatform | 1.10.2 |
+| AGP | 9.1.0 |
 | Compile/Target SDK | 36 |
 | Min SDK | 24 |
 | Java compatibility | 11 (JBR 21 for build) |
-| Gradle | 8.14.3 |
+| Gradle | 9.3.1 |
 | Ktor | 3.3.3 |
 | Material3 (multiplatform) | 1.10.0-alpha05 |
 | AndroidX Lifecycle | 2.9.6 |
@@ -89,10 +89,12 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 
 ```
 DevDrill/
-├── composeApp/              # KMP Compose application (Android + iOS entry points)
+├── androidApp/              # Android application entry point (thin shell)
+│   └── src/
+│       └── main/            # MainActivity, AndroidManifest, launcher resources
+├── composeApp/              # KMP Compose library (shared UI, Android + iOS)
 │   └── src/
 │       ├── commonMain/      # App.kt (NavHost), navigation/Routes.kt, screens/
-│       ├── androidMain/     # MainActivity, Android resources
 │       ├── iosMain/         # MainViewController (ComposeUIViewController bridge)
 │       └── commonTest/
 ├── shared/                  # KMP library (Android, iOS, JVM)
@@ -113,10 +115,12 @@ DevDrill/
 
 ```
 DevDrill/
-├── composeApp/              # KMP application shell (Android + iOS entry points, Koin init)
+├── androidApp/              # Android application entry point (thin shell)
+│   └── src/
+│       └── main/            # MainActivity, AndroidManifest, launcher resources
+├── composeApp/              # KMP Compose library (shared UI, Koin init)
 │   └── src/
 │       ├── commonMain/      # App() root composable, startKoin initialization
-│       ├── androidMain/     # MainActivity, platformModule (Android)
 │       ├── iosMain/         # MainViewController, platformModule (iOS)
 │       └── commonTest/
 ├── core/
@@ -148,7 +152,8 @@ DevDrill/
 ### Current
 
 ```
-:composeApp → :shared (Android + iOS UI)
+:androidApp → :composeApp (Android entry point)
+:composeApp → :shared (shared Compose UI, Android + iOS)
 :server     → :shared (JVM server)
 :shared     → (no external dependencies, pure KMP library)
 ```
@@ -156,8 +161,9 @@ DevDrill/
 ### Target
 
 ```
+:androidApp → :composeApp (Android entry point)
 :composeApp → :shared → :core:model
-                      → :core:designsystem
+                       → :core:designsystem
 
 :server → :core:model (data models only, no Compose/UI)
 
@@ -178,17 +184,19 @@ DevDrill/
 
 ### Current State
 
+- **Android entry point:** `MainActivity` in `:androidApp` (thin shell, depends on `:composeApp`)
 - **Shared UI:** `App()` composable in `composeApp/commonMain` used by Android and iOS
 - **Navigation:** Type-safe Navigation Compose with `@Serializable` routes in `composeApp`
 - **Screens:** Stateless composables with navigation callback lambdas (no ViewModels yet)
 - **Platform abstraction:** `expect/actual` for `Platform` interface in `:shared`
 - **Server:** Ktor `embeddedServer(Netty)` with routing, shares `Greeting` class from `:shared`
+- **KMP + AGP 9:** Uses `com.android.kotlin.multiplatform.library` for `:composeApp` and `:shared`
 
 ### Target Layers
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  composeApp (Platform Entry Points)                 │
+│  androidApp / iosApp (Platform Entry Points)        │
 │  MainActivity / MainViewController / Koin init      │
 ├─────────────────────────────────────────────────────┤
 │  shared/screens/ (Presentation Layer)               │
@@ -289,6 +297,9 @@ single<LocalNotificationService> { IOSNotificationService() }
 ### Current
 
 ```
+androidApp/src/main/kotlin/com/sls/devdrill/
+└── MainActivity.kt              # Single Activity, enableEdgeToEdge, setContent { App() }
+
 composeApp/src/commonMain/kotlin/com/sls/devdrill/
 ├── navigation/
 │   └── Routes.kt                # @Serializable route objects (HomeRoute, GreetingRoute)
@@ -296,9 +307,6 @@ composeApp/src/commonMain/kotlin/com/sls/devdrill/
 │   ├── HomeScreen.kt            # Home screen composable
 │   └── GreetingScreen.kt        # Greeting screen composable
 └── App.kt                       # Root composable (MaterialTheme + NavHost)
-
-composeApp/src/androidMain/kotlin/com/sls/devdrill/
-└── MainActivity.kt              # Single Activity, enableEdgeToEdge, setContent { App() }
 
 composeApp/src/iosMain/kotlin/com/sls/devdrill/
 └── MainViewController.kt        # ComposeUIViewController { App() }
@@ -315,13 +323,13 @@ server/src/main/kotlin/com/sls/devdrill/
 ### Target (evolve toward)
 
 ```
-composeApp/src/commonMain/kotlin/com/sls/devdrill/
-└── App.kt                       # Root composable (theme + Koin init + NavHost)
-
-composeApp/src/androidMain/kotlin/com/sls/devdrill/
+androidApp/src/main/kotlin/com/sls/devdrill/
 ├── MainActivity.kt              # Single Activity, enableEdgeToEdge, setContent { App() }
 └── di/
     └── PlatformModule.android.kt # Android Koin platformModule
+
+composeApp/src/commonMain/kotlin/com/sls/devdrill/
+└── App.kt                       # Root composable (theme + Koin init + NavHost)
 
 composeApp/src/iosMain/kotlin/com/sls/devdrill/
 ├── MainViewController.kt        # ComposeUIViewController { App() }
@@ -780,7 +788,7 @@ Target workflow with parallel jobs:
 
 | Job | Runs |
 |-----|------|
-| `build-android` | `./gradlew :composeApp:assembleDebug` |
+| `build-android` | `./gradlew :androidApp:assembleDebug` |
 | `build-server` | `./gradlew :server:build` |
 | `test-jvm` | `./gradlew test` |
 | `lint` | `./gradlew detekt` |
@@ -811,6 +819,7 @@ Target workflow with parallel jobs:
 ## Notes
 
 - No build-logic convention plugins — standard KMP Gradle setup (matches KotlinConf App)
+- **AGP 9.1.0** with `com.android.kotlin.multiplatform.library` plugin for KMP modules (`:composeApp`, `:shared`); `:androidApp` is a pure Android application shell
 - **Navigation is implemented** using JetBrains Navigation Compose 2.9.1 with `@Serializable` type-safe routes and `kotlinx-serialization` 1.8.1 (not Navigation3 alpha); migrate when Navigation3 stabilizes
 - Screens and navigation currently live in `:composeApp`; migrate to `:shared` when adding ViewModels and services
 - No DI framework yet — add Koin when introducing ViewModels and services
