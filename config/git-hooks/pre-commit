@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Pre-commit hook: runs Detekt (Kotlin) and SwiftLint (Swift) on staged files.
+# Install with: ./gradlew installGitHooks
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+EXIT_STATUS=0
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "=== Pre-commit hook ==="
+
+# ─── Detekt (Kotlin) ────────────────────────────────────────────────
+
+STAGED_KT_FILES=$(git diff --cached --name-only --diff-filter=ACM -- '*.kt' '*.kts')
+
+if [ -n "$STAGED_KT_FILES" ]; then
+    echo ""
+    echo -e "${YELLOW}Running Detekt on Kotlin sources...${NC}"
+
+    DETEKT_TASKS=""
+    if echo "$STAGED_KT_FILES" | grep -q "^composeApp/"; then
+        DETEKT_TASKS="$DETEKT_TASKS :composeApp:detekt"
+    fi
+    if echo "$STAGED_KT_FILES" | grep -q "^shared/"; then
+        DETEKT_TASKS="$DETEKT_TASKS :shared:detekt"
+    fi
+    if echo "$STAGED_KT_FILES" | grep -q "^server/"; then
+        DETEKT_TASKS="$DETEKT_TASKS :server:detekt"
+    fi
+
+    if [ -n "$DETEKT_TASKS" ]; then
+        if "$REPO_ROOT/gradlew" -p "$REPO_ROOT" $DETEKT_TASKS --continue --quiet 2>&1; then
+            echo -e "${GREEN}Detekt: PASSED${NC}"
+        else
+            echo -e "${RED}Detekt: FAILED${NC}"
+            echo "  Fix Kotlin lint issues before committing."
+            echo "  Run: ./gradlew detekt"
+            EXIT_STATUS=1
+        fi
+    else
+        echo "Detekt: staged Kotlin files are not in linted modules, skipping."
+    fi
+else
+    echo ""
+    echo "Detekt: no staged Kotlin files, skipping."
+fi
+
+# ─── SwiftLint (Swift) ──────────────────────────────────────────────
+
+STAGED_SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACM -- '*.swift')
+
+if [ -n "$STAGED_SWIFT_FILES" ]; then
+    if command -v swiftlint &> /dev/null; then
+        echo ""
+        echo -e "${YELLOW}Running SwiftLint on staged Swift files...${NC}"
+
+        SWIFTLINT_EXIT=0
+        while IFS= read -r file; do
+            if [ -f "$REPO_ROOT/$file" ]; then
+                swiftlint lint --strict --config "$REPO_ROOT/iosApp/.swiftlint.yml" \
+                    --quiet "$REPO_ROOT/$file" || SWIFTLINT_EXIT=1
+            fi
+        done <<< "$STAGED_SWIFT_FILES"
+
+        if [ $SWIFTLINT_EXIT -eq 0 ]; then
+            echo -e "${GREEN}SwiftLint: PASSED${NC}"
+        else
+            echo -e "${RED}SwiftLint: FAILED${NC}"
+            echo "  Fix Swift lint issues before committing."
+            echo "  Run: cd iosApp && swiftlint --config .swiftlint.yml"
+            EXIT_STATUS=1
+        fi
+    else
+        echo ""
+        echo -e "${YELLOW}SwiftLint: not installed, skipping Swift lint.${NC}"
+        echo "  Install with: brew install swiftlint"
+    fi
+else
+    echo ""
+    echo "SwiftLint: no staged Swift files, skipping."
+fi
+
+# ─── Summary ────────────────────────────────────────────────────────
+
+echo ""
+if [ $EXIT_STATUS -eq 0 ]; then
+    echo -e "${GREEN}=== All checks passed ===${NC}"
+else
+    echo -e "${RED}=== Pre-commit checks FAILED ===${NC}"
+    echo "Commit aborted. Fix the issues above and try again."
+fi
+
+exit $EXIT_STATUS

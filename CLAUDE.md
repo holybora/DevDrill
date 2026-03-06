@@ -52,6 +52,9 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 # SwiftLint (iOS)
 cd iosApp && swiftlint --config .swiftlint.yml # Lint Swift code
 
+# Git hooks
+./gradlew installGitHooks                      # Install pre-commit hook (Detekt + SwiftLint)
+
 # Code coverage (kover)
 ./gradlew test :composeApp:koverHtmlReport     # HTML → composeApp/build/reports/kover/html/
 ./gradlew test :composeApp:koverXmlReport      # XML  → composeApp/build/reports/kover/report.xml
@@ -813,6 +816,14 @@ Target workflow with parallel jobs:
 - Detekt with Compose rules (`io.nlopez.compose.rules:detekt`) for Composable best practices
 - Run: `./gradlew detekt`
 - Config: `config/detekt/detekt.yml`
+
+### Git Hooks
+
+A pre-commit hook runs Detekt on staged Kotlin files and SwiftLint on staged Swift files.
+Install with `./gradlew installGitHooks`. The hook script lives in `config/git-hooks/pre-commit`.
+- Detekt runs only on modules with staged `.kt`/`.kts` files (`:composeApp`, `:shared`, `:server`)
+- SwiftLint runs only on staged `.swift` files
+- SwiftLint is skipped gracefully if not installed (Linux/CI)
 
 ### Kover
 
