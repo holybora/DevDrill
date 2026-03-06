@@ -14,6 +14,7 @@ import com.sls.devdrill.navigation.HomeRoute
 import com.sls.devdrill.screens.GreetingScreen
 import com.sls.devdrill.screens.HomeScreen
 
+@Suppress("ModifierMissing")
 @Composable
 fun App() {
     MaterialTheme {

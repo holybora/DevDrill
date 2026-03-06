@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.SourceTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.detekt)
 }
 
 kotlin {
@@ -47,4 +49,20 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom("${rootProject.projectDir}/config/detekt/detekt.yml")
+    parallel = true
+}
+
+afterEvaluate {
+    tasks.withType<SourceTask>().matching { it.name.startsWith("detekt") }.configureEach {
+        exclude("**/generated/**")
+    }
+}
+
+dependencies {
+    detektPlugins(libs.detekt.compose.rules)
 }

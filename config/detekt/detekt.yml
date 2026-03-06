@@ -1,0 +1,43 @@
+# Detekt configuration for DevDrill KMP project
+# Applied on top of default config (buildUponDefaultConfig = true)
+# Detekt 2.0.0-alpha.2 — uses renamed rule sets and property names
+
+complexity:
+  LongParameterList:
+    allowedFunctionParameters: 10
+    allowedConstructorParameters: 10
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    ignoreAnnotatedFunctions:
+      - 'Preview'
+  CyclomaticComplexMethod:
+    allowedComplexity: 20
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+  MaxLineLength:
+    maxLineLength: 120
+    excludeCommentStatements: true
+  WildcardImport:
+    excludeImports:
+      - 'kotlinx.coroutines.*'
+  ForbiddenComment:
+    active: false
+
+naming:
+  MatchingDeclarationName:
+    active: false
+  FunctionNaming:
+    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Za-z0-9]*'
+
+comments:
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicProperty:
+    active: false
