@@ -45,8 +45,12 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 ./gradlew clean :androidApp:assembleDebug
 
 # Static analysis (detekt)
-./gradlew detekt                               # All modules
+./gradlew detekt --continue                    # All modules
+./gradlew :composeApp:detekt                   # Single module
 ./gradlew :shared:detekt                       # Single module
+
+# SwiftLint (iOS)
+cd iosApp && swiftlint --config .swiftlint.yml # Lint Swift code
 
 # Code coverage (kover)
 ./gradlew test :composeApp:koverHtmlReport     # HTML → composeApp/build/reports/kover/html/
@@ -75,7 +79,9 @@ Package: `com.sls.devdrill`. Early-stage project (v1.0) using shared Compose Mul
 | kotlinx-datetime | 0.7.x (planned) |
 | Multiplatform Settings | 1.3.0 (planned) |
 | Coil | 3.x (planned) |
-| Detekt | 1.23.x (planned) |
+| Detekt | 2.0.0-alpha.2 |
+| Compose Rules (detekt) | 0.5.6 |
+| SwiftLint | 0.61.0 |
 | Kover | 0.9.x (planned) |
 | Logback (server) | 1.5.24 |
 
@@ -825,5 +831,6 @@ Target workflow with parallel jobs:
 - No DI framework yet — add Koin when introducing ViewModels and services
 - No state management beyond Compose `remember` — add ViewModel + StateFlow per the MVVM pattern above
 - Storage uses Multiplatform Settings (key-value) when added; use SQLDelight only if relational queries are needed
-- No CI/CD, linting, or code coverage tooling configured yet
+- No CI/CD or code coverage tooling configured yet
+- **Linting configured:** Detekt 2.0.0-alpha.2 with Compose rules for Kotlin; SwiftLint 0.61.0 for iOS Swift code
 - iOS build requires Xcode; CI iOS builds are optional until the project matures

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
+    alias(libs.plugins.detekt)
     application
 }
 
@@ -20,4 +21,10 @@ dependencies {
     implementation(libs.ktor.serverNetty)
     testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.kotlin.testJunit)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom("${rootProject.projectDir}/config/detekt/detekt.yml")
+    parallel = true
 }

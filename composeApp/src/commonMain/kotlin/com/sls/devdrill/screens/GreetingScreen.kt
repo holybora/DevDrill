@@ -22,11 +22,12 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun GreetingScreen(
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val greeting = remember { Greeting().greet() }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

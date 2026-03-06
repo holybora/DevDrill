@@ -16,9 +16,10 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onNavigateToGreeting: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

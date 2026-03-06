@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.detekt)
 }
 
 kotlin {
@@ -29,4 +30,10 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom("${rootProject.projectDir}/config/detekt/detekt.yml")
+    parallel = true
 }
